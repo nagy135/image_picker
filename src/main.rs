@@ -1,47 +1,76 @@
+use iced::event::Event;
 use iced::widget::image::Handle;
-use iced::widget::{column, image, row, Column, Image, Row};
-use iced::{Alignment, Element, Length, Sandbox, Settings};
+use iced::widget::{column, Image, Row};
+use iced::{
+    executor, subscription, window, Alignment, Application, Command, Element, Length, Settings,
+    Subscription, Theme,
+};
 use std::fs;
-
-pub fn main() -> iced::Result {
-    Picker::run(Settings::default())
-}
 
 const ALLOWED_IMAGE_EXTENSIONS: [&str; 3] = ["png", "jpg", "jpeg"];
 
+pub fn main() -> iced::Result {
+    Picker::run(Settings {
+        window: window::Settings {
+            ..window::Settings::default()
+        },
+        ..Settings::default()
+    })
+}
+#[derive(Debug, Default)]
 struct Picker {
     paths: Vec<String>,
 }
 
-impl Sandbox for Picker {
-    type Message = ();
+#[derive(Debug, Clone)]
+enum Message {
+    EventOccurred(Event),
+}
 
-    fn new() -> Self {
+impl Application for Picker {
+    type Message = Message;
+    type Theme = Theme;
+    type Executor = executor::Default;
+    type Flags = ();
+
+    fn new(_flags: ()) -> (Picker, Command<Message>) {
         let directory_path = "/Users/viktornagy/Pictures";
         // let directory_path = "/Users/viktornagy/Pictures/silicon";
 
-        Self {
-            paths: fs::read_dir(directory_path)
-                .unwrap()
-                .map(|r| r.unwrap().path().to_str().unwrap().to_string())
-                .filter(|p| {
-                    for extension in &ALLOWED_IMAGE_EXTENSIONS {
-                        if p.ends_with(extension) {
-                            return true;
+        (
+            Self {
+                paths: fs::read_dir(directory_path)
+                    .unwrap()
+                    .map(|r| r.unwrap().path().to_str().unwrap().to_string())
+                    .filter(|p| {
+                        for extension in &ALLOWED_IMAGE_EXTENSIONS {
+                            if p.ends_with(extension) {
+                                return true;
+                            }
                         }
-                    }
-                    return false;
-                })
-                .collect(),
-        }
+                        return false;
+                    })
+                    .collect(),
+            },
+            Command::none(),
+        )
+    }
+    fn subscription(&self) -> Subscription<Self::Message> {
+        subscription::events().map(Message::EventOccurred)
     }
 
     fn title(&self) -> String {
         String::from("Image picker")
     }
 
-    fn update(&mut self, _message: Self::Message) {
-        ()
+    fn update(&mut self, message: Message) -> Command<Message> {
+        match message {
+            Message::EventOccurred(event) => {
+                println!("event {:?}", event);
+
+                Command::none()
+            }
+        }
     }
 
     fn view(&self) -> Element<Self::Message> {
