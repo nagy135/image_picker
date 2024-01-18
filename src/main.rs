@@ -1,11 +1,12 @@
 use iced::event::Event;
 use iced::keyboard::Event::KeyReleased;
 use iced::keyboard::KeyCode;
+use iced::widget::container::Appearance;
 use iced::widget::image::Handle;
-use iced::widget::{Checkbox, Column, Container, Image, Row, Toggler};
+use iced::widget::{Checkbox, Column, Container, Image, Row};
 use iced::{
-    executor, subscription, window, Alignment, Application, Command, Element, Length, Settings,
-    Subscription, Theme,
+    executor, subscription, window, Alignment, Application, Color, Command, Element, Length,
+    Settings, Subscription, Theme,
 };
 use std::{fs, process};
 
@@ -117,7 +118,16 @@ impl Application for Picker {
                 .spacing(10)
                 .width(Length::FillPortion(1)),
             );
-            let container = Element::new(Container::new(element).width(Length::FillPortion(1)));
+            let container = Element::new(
+                Container::new(element)
+                    .padding(3)
+                    .width(Length::FillPortion(1))
+                    .style(|_t: &_| Appearance {
+                        border_color: Color::BLACK,
+                        border_width: 1.0,
+                        ..Default::default()
+                    }),
+            );
 
             match i {
                 i if i <= 3 => row1.push(container),
@@ -128,9 +138,21 @@ impl Application for Picker {
         }
 
         Column::with_children(vec![
-            Element::new(Row::with_children(row1).height(Length::FillPortion(1))),
-            Element::new(Row::with_children(row2).height(Length::FillPortion(1))),
-            Element::new(Row::with_children(row3).height(Length::FillPortion(1))),
+            Element::new(
+                Row::with_children(row1)
+                    .spacing(10)
+                    .height(Length::FillPortion(1)),
+            ),
+            Element::new(
+                Row::with_children(row2)
+                    .spacing(10)
+                    .height(Length::FillPortion(1)),
+            ),
+            Element::new(
+                Row::with_children(row3)
+                    .spacing(10)
+                    .height(Length::FillPortion(1)),
+            ),
         ])
         .padding(20)
         .spacing(20)
