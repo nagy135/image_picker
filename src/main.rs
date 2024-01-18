@@ -1,5 +1,5 @@
 use iced::event::Event;
-use iced::keyboard::Event::KeyReleased;
+use iced::keyboard::Event::KeyPressed;
 use iced::keyboard::KeyCode;
 use iced::widget::container::Appearance;
 use iced::widget::image::Handle;
@@ -25,6 +25,7 @@ pub fn main() -> iced::Result {
 struct Picker {
     paths: Vec<String>,
     selected: Vec<bool>,
+    cursor: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -45,6 +46,7 @@ impl Application for Picker {
         (
             Self {
                 selected: vec![false; 9],
+                cursor: 1,
                 paths: fs::read_dir(directory_path)
                     .unwrap()
                     .map(|r| r.unwrap().path().to_str().unwrap().to_string())
@@ -70,17 +72,30 @@ impl Application for Picker {
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
+        let mut cursor_change: i32 = 0;
         match message {
             Message::CheckboxToggled(id, value) => {
                 self.selected[id - 1] = !value;
             }
             Message::EventOccurred(event) => {
                 if let Event::Keyboard(keyboard_event) = event {
-                    if let KeyReleased { key_code, .. } = keyboard_event {
+                    if let KeyPressed { key_code, .. } = keyboard_event {
                         match key_code {
                             KeyCode::Q => {
                                 // TODO: maybe gracefully die here
                                 process::exit(0);
+                            }
+                            KeyCode::J => {
+                                cursor_change = 3;
+                            }
+                            KeyCode::K => {
+                                cursor_change = -3;
+                            }
+                            KeyCode::H => {
+                                cursor_change = -1;
+                            }
+                            KeyCode::L => {
+                                cursor_change = 1;
                             }
                             _ => (),
                         }
@@ -88,6 +103,8 @@ impl Application for Picker {
                 }
             }
         }
+        self.cursor =
+            (self.cursor as i32 + cursor_change).clamp(0, self.paths.len() as i32) as usize;
         Command::none()
     }
 
@@ -118,13 +135,19 @@ impl Application for Picker {
                 .spacing(10)
                 .width(Length::FillPortion(1)),
             );
+
+            let border = match i {
+                i if i == self.cursor => Color::BLACK,
+                _ => Color::TRANSPARENT,
+            };
+
             let container = Element::new(
                 Container::new(element)
                     .padding(3)
                     .width(Length::FillPortion(1))
-                    .style(|_t: &_| Appearance {
-                        border_color: Color::BLACK,
-                        border_width: 1.0,
+                    .style(move |_t: &_| Appearance {
+                        border_color: border,
+                        border_width: 2.0,
                         ..Default::default()
                     }),
             );
