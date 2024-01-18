@@ -1,11 +1,13 @@
 use iced::event::Event;
+use iced::keyboard::Event::KeyReleased;
+use iced::keyboard::KeyCode;
 use iced::widget::image::Handle;
 use iced::widget::{column, Image, Row};
 use iced::{
     executor, subscription, window, Alignment, Application, Command, Element, Length, Settings,
     Subscription, Theme,
 };
-use std::fs;
+use std::{fs, process};
 
 const ALLOWED_IMAGE_EXTENSIONS: [&str; 3] = ["png", "jpg", "jpeg"];
 
@@ -66,11 +68,19 @@ impl Application for Picker {
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
             Message::EventOccurred(event) => {
-                println!("event {:?}", event);
-
-                Command::none()
+                if let Event::Keyboard(keyboard_event) = event {
+                    if let KeyReleased { key_code, .. } = keyboard_event {
+                        match key_code {
+                            KeyCode::Q => {
+                                process::exit(0);
+                            }
+                            _ => (),
+                        }
+                    }
+                }
             }
         }
+        Command::none()
     }
 
     fn view(&self) -> Element<Self::Message> {
@@ -82,12 +92,10 @@ impl Application for Picker {
 
         for path in &self.paths {
             i += 1;
-            println!("i {}", i);
             let image = Image::<Handle>::new(path)
                 .width(Length::Fill)
                 .height(Length::Fill);
 
-            println!("image {:?}", image);
             match i {
                 i if i <= 3 => row1.push(Element::new(image)),
                 i if i <= 6 => row2.push(Element::new(image)),
