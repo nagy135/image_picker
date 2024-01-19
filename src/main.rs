@@ -113,7 +113,8 @@ impl Application for Picker {
                 }
             }
         }
-        self.cursor = (self.cursor as i32 + cursor_change).clamp(0, 8) as usize;
+        self.cursor =
+            ((self.cursor as i32 + cursor_change) as usize).clamp(0, self.paths.len() - 1);
         Command::none()
     }
 
@@ -124,7 +125,13 @@ impl Application for Picker {
 
         let mut i = 0;
 
-        for path in &self.paths {
+        let skip_distance = match self.cursor {
+            9.. => ((self.cursor - 9) / 3 + 1) * 3,
+            _ => 0,
+        };
+
+        for path in self.paths.iter().skip(skip_distance) {
+            println!("path {}", path);
             if i >= 9 {
                 break;
             }
@@ -145,7 +152,7 @@ impl Application for Picker {
             );
 
             let border = match i {
-                i if i == self.cursor => Color::BLACK,
+                i if i == self.cursor - skip_distance => Color::BLACK,
                 _ => Color::TRANSPARENT,
             };
 
