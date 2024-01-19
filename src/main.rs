@@ -43,22 +43,24 @@ impl Application for Picker {
     fn new(_flags: ()) -> (Picker, Command<Message>) {
         let directory_path = "/Users/viktornagy/Pictures";
 
+        let paths: Vec<String> = fs::read_dir(directory_path)
+            .unwrap()
+            .map(|r| r.unwrap().path().to_str().unwrap().to_string())
+            .filter(|p| {
+                for extension in &ALLOWED_IMAGE_EXTENSIONS {
+                    if p.ends_with(extension) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+            .collect();
+
         (
             Self {
-                selected: vec![false; 9],
-                cursor: 1,
-                paths: fs::read_dir(directory_path)
-                    .unwrap()
-                    .map(|r| r.unwrap().path().to_str().unwrap().to_string())
-                    .filter(|p| {
-                        for extension in &ALLOWED_IMAGE_EXTENSIONS {
-                            if p.ends_with(extension) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    })
-                    .collect(),
+                selected: vec![false; paths.len()],
+                cursor: 0,
+                paths,
             },
             Command::none(),
         )
@@ -75,7 +77,7 @@ impl Application for Picker {
         let mut cursor_change: i32 = 0;
         match message {
             Message::CheckboxToggled(id, value) => {
-                self.selected[id - 1] = !value;
+                self.selected[id] = !value;
             }
             Message::EventOccurred(event) => {
                 if let Event::Keyboard(keyboard_event) = event {
@@ -83,6 +85,11 @@ impl Application for Picker {
                         match key_code {
                             KeyCode::Q => {
                                 // TODO: maybe gracefully die here
+                                for (i, path) in self.paths.iter().enumerate() {
+                                    if self.selected[i] {
+                                        println!("{}", path);
+                                    }
+                                }
                                 process::exit(0);
                             }
                             KeyCode::J => {
@@ -97,14 +104,16 @@ impl Application for Picker {
                             KeyCode::L => {
                                 cursor_change = 1;
                             }
+                            KeyCode::Space | KeyCode::M => {
+                                self.selected[self.cursor] = !self.selected[self.cursor];
+                            }
                             _ => (),
                         }
                     }
                 }
             }
         }
-        self.cursor =
-            (self.cursor as i32 + cursor_change).clamp(0, self.paths.len() as i32) as usize;
+        self.cursor = (self.cursor as i32 + cursor_change).clamp(0, 8) as usize;
         Command::none()
     }
 
@@ -116,8 +125,7 @@ impl Application for Picker {
         let mut i = 0;
 
         for path in &self.paths {
-            i += 1;
-            if i > 9 {
+            if i >= 9 {
                 break;
             }
             let image = Image::<Handle>::new(path)
@@ -127,8 +135,8 @@ impl Application for Picker {
             let element = Element::new(
                 Column::with_children(vec![
                     Element::new(image),
-                    Element::new(Checkbox::new("", self.selected[i - 1], move |_x| {
-                        Message::CheckboxToggled(i, self.selected[i - 1])
+                    Element::new(Checkbox::new("", self.selected[i], move |_x| {
+                        Message::CheckboxToggled(i, self.selected[i])
                     })),
                 ])
                 .align_items(Alignment::Center)
@@ -153,11 +161,12 @@ impl Application for Picker {
             );
 
             match i {
-                i if i <= 3 => row1.push(container),
-                i if i <= 6 => row2.push(container),
-                i if i <= 9 => row3.push(container),
+                i if i < 3 => row1.push(container),
+                i if i < 6 => row2.push(container),
+                i if i < 9 => row3.push(container),
                 _ => break,
             }
+            i += 1;
         }
 
         Column::with_children(vec![
