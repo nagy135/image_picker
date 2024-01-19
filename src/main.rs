@@ -131,7 +131,6 @@ impl Application for Picker {
         };
 
         for path in self.paths.iter().skip(skip_distance) {
-            println!("path {}", path);
             if i >= 9 {
                 break;
             }
@@ -142,9 +141,11 @@ impl Application for Picker {
             let element = Element::new(
                 Column::with_children(vec![
                     Element::new(image),
-                    Element::new(Checkbox::new("", self.selected[i], move |_x| {
-                        Message::CheckboxToggled(i, self.selected[i])
-                    })),
+                    Element::new(Checkbox::new(
+                        "",
+                        self.selected[i + skip_distance],
+                        move |_x| Message::CheckboxToggled(i, self.selected[i + skip_distance]),
+                    )),
                 ])
                 .align_items(Alignment::Center)
                 .spacing(10)
