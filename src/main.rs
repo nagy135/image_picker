@@ -121,13 +121,21 @@ impl Application for Picker {
             }
         }
         if self.cursor as i32 + cursor_change < 0 || self.cursor as i32 + cursor_change > 8 {
+            if self.cursor + self.offset >= self.paths.len() {
+                return Command::none();
+            }
             if cursor_change < 0 {
-                self.offset -= 3
+                if self.offset > 0 {
+                    self.offset -= 3
+                }
             } else {
                 self.offset += 3
             }
         } else {
-            self.cursor = (self.cursor as i32 + cursor_change) as usize;
+            let temp = self.cursor as i32 + cursor_change;
+            if (temp as usize) < self.paths.len() && temp >= 0 {
+                self.cursor = temp as usize;
+            }
         }
         Command::none()
     }
