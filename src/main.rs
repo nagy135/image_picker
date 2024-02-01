@@ -5,7 +5,7 @@ use iced::widget::container::Appearance;
 use iced::widget::image::Handle;
 use iced::widget::{Checkbox, Column, Container, Image, Row};
 use iced::{
-    executor, subscription, window, Alignment, Application, Color, Command, Element, Length,
+    executor, subscription, theme, window, Alignment, Application, Color, Command, Element, Length,
     Settings, Subscription, Theme,
 };
 use std::{env, fs, process};
@@ -164,14 +164,16 @@ impl Application for Picker {
             let element = Element::new(
                 Column::with_children(vec![
                     Element::new(image),
-                    Element::new(Checkbox::new(
-                        "",
-                        self.selected[i + skip_distance],
-                        move |_x| Message::CheckboxToggled(i, self.selected[i + skip_distance]),
-                    )),
+                    Element::new(
+                        Checkbox::new("", self.selected[i + skip_distance], move |_x| {
+                            Message::CheckboxToggled(i, self.selected[i + skip_distance])
+                        })
+                        .style(theme::Checkbox::Secondary),
+                    ),
                 ])
                 .align_items(Alignment::Center)
-                .spacing(10)
+                .padding(5)
+                .spacing(5)
                 .width(Length::FillPortion(1)),
             );
 
@@ -182,11 +184,12 @@ impl Application for Picker {
 
             let container = Element::new(
                 Container::new(element)
-                    .padding(3)
+                    .padding(5)
                     .width(Length::FillPortion(1))
                     .style(move |_t: &_| Appearance {
                         border_color: border,
-                        border_width: 2.0,
+                        border_width: 3.0,
+                        border_radius: [5.0, 5.0, 5.0, 5.0].into(),
                         ..Default::default()
                     }),
             );
