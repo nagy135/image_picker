@@ -114,6 +114,11 @@ impl Application for Picker {
                                 self.selected[self.cursor + self.offset] =
                                     !self.selected[self.cursor + self.offset];
                             }
+
+                            KeyCode::D => {
+                                let path_to_delete = self.paths.remove(self.cursor + self.offset);
+                                fs::remove_file(path_to_delete).unwrap();
+                            }
                             _ => (),
                         }
                     }
