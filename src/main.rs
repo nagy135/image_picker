@@ -178,7 +178,7 @@ impl Application for Picker {
             );
 
             let border = match i {
-                i if i == self.cursor => Color::BLACK,
+                i if i == self.cursor => Color::from_rgb(0.04, 0.04, 0.04),
                 _ => Color::TRANSPARENT,
             };
 
