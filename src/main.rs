@@ -8,7 +8,7 @@ use iced::{
     executor, subscription, window, Alignment, Application, Color, Command, Element, Length,
     Settings, Subscription, Theme,
 };
-use std::{fs, process};
+use std::{env, fs, process};
 
 const ALLOWED_IMAGE_EXTENSIONS: [&str; 3] = ["png", "jpg", "jpeg"];
 
@@ -26,6 +26,7 @@ struct Picker {
     paths: Vec<String>,
     selected: Vec<bool>,
     cursor: usize,
+    offset: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -41,7 +42,11 @@ impl Application for Picker {
     type Flags = ();
 
     fn new(_flags: ()) -> (Picker, Command<Message>) {
-        let directory_path = "/Users/viktornagy/Pictures";
+        let args: Vec<String> = env::args().collect();
+        if args.len() < 2 {
+            panic!("Please provide a directory as an argument");
+        }
+        let directory_path = args[1].clone();
 
         let paths: Vec<String> = fs::read_dir(directory_path)
             .unwrap()
@@ -60,6 +65,7 @@ impl Application for Picker {
             Self {
                 selected: vec![false; paths.len()],
                 cursor: 0,
+                offset: 0,
                 paths,
             },
             Command::none(),
@@ -105,7 +111,8 @@ impl Application for Picker {
                                 cursor_change = 1;
                             }
                             KeyCode::Space | KeyCode::M => {
-                                self.selected[self.cursor] = !self.selected[self.cursor];
+                                self.selected[self.cursor + self.offset] =
+                                    !self.selected[self.cursor + self.offset];
                             }
                             _ => (),
                         }
@@ -113,8 +120,15 @@ impl Application for Picker {
                 }
             }
         }
-        self.cursor =
-            ((self.cursor as i32 + cursor_change) as usize).clamp(0, self.paths.len() - 1);
+        if self.cursor as i32 + cursor_change < 0 || self.cursor as i32 + cursor_change > 8 {
+            if cursor_change < 0 {
+                self.offset -= 3
+            } else {
+                self.offset += 3
+            }
+        } else {
+            self.cursor = (self.cursor as i32 + cursor_change) as usize;
+        }
         Command::none()
     }
 
@@ -125,11 +139,7 @@ impl Application for Picker {
 
         let mut i = 0;
 
-        let skip_distance = match self.cursor {
-            9.. => ((self.cursor - 9) / 3 + 1) * 3,
-            _ => 0,
-        };
-
+        let skip_distance = self.offset;
         for path in self.paths.iter().skip(skip_distance) {
             if i >= 9 {
                 break;
@@ -153,7 +163,7 @@ impl Application for Picker {
             );
 
             let border = match i {
-                i if i == self.cursor - skip_distance => Color::BLACK,
+                i if i == self.cursor => Color::BLACK,
                 _ => Color::TRANSPARENT,
             };
 
