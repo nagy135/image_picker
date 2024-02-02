@@ -162,7 +162,7 @@ impl Application for Picker {
                 .height(Length::FillPortion(2));
 
             let element = Element::new(
-                Column::with_children(vec![
+                Row::with_children(vec![
                     Element::new(image),
                     Element::new(
                         Checkbox::new("", self.selected[i + skip_distance], move |_x| {
@@ -172,8 +172,7 @@ impl Application for Picker {
                     ),
                 ])
                 .align_items(Alignment::Center)
-                .padding(5)
-                .spacing(5)
+                .padding(10)
                 .width(Length::FillPortion(1)),
             );
 
