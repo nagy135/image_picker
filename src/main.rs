@@ -27,6 +27,7 @@ struct Picker {
     selected: Vec<bool>,
     cursor: usize,
     offset: usize,
+    zoom_mode: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -67,6 +68,7 @@ impl Application for Picker {
                 cursor: 0,
                 offset: 0,
                 paths,
+                zoom_mode: false,
             },
             Command::none(),
         )
@@ -109,6 +111,9 @@ impl Application for Picker {
                             }
                             KeyCode::L => {
                                 cursor_change = 1;
+                            }
+                            KeyCode::Enter => {
+                                self.zoom_mode = !self.zoom_mode;
                             }
                             KeyCode::Space | KeyCode::M => {
                                 self.selected[self.cursor + self.offset] =
@@ -201,27 +206,33 @@ impl Application for Picker {
             }
             i += 1;
         }
-
-        Column::with_children(vec![
-            Element::new(
-                Row::with_children(row1)
-                    .spacing(10)
-                    .height(Length::FillPortion(1)),
-            ),
-            Element::new(
-                Row::with_children(row2)
-                    .spacing(10)
-                    .height(Length::FillPortion(1)),
-            ),
-            Element::new(
-                Row::with_children(row3)
-                    .spacing(10)
-                    .height(Length::FillPortion(1)),
-            ),
-        ])
-        .padding(20)
-        .spacing(20)
-        .align_items(Alignment::Center)
-        .into()
+        if self.zoom_mode {
+            let image = Image::<Handle>::new(self.paths[self.cursor + self.offset].clone())
+                .width(Length::Fill)
+                .height(Length::FillPortion(2));
+            Element::new(image)
+        } else {
+            Column::with_children(vec![
+                Element::new(
+                    Row::with_children(row1)
+                        .spacing(10)
+                        .height(Length::FillPortion(1)),
+                ),
+                Element::new(
+                    Row::with_children(row2)
+                        .spacing(10)
+                        .height(Length::FillPortion(1)),
+                ),
+                Element::new(
+                    Row::with_children(row3)
+                        .spacing(10)
+                        .height(Length::FillPortion(1)),
+                ),
+            ])
+            .padding(20)
+            .spacing(20)
+            .align_items(Alignment::Center)
+            .into()
+        }
     }
 }
