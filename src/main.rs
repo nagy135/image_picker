@@ -13,6 +13,18 @@ use std::{env, fs, process};
 
 const ALLOWED_IMAGE_EXTENSIONS: [&str; 3] = ["png", "jpg", "jpeg"];
 
+use clap::Parser;
+
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    folder: String,
+
+    #[arg(short, long, default_value_t = String::from(""))]
+    script: String,
+}
+
 pub fn main() -> iced::Result {
     Picker::run(Settings {
         window: window::Settings {
@@ -45,16 +57,8 @@ impl Application for Picker {
     type Flags = ();
 
     fn new(_flags: ()) -> (Picker, Command<Message>) {
-        let args: Vec<String> = env::args().collect();
-        if args.len() < 2 {
-            panic!("Please provide a directory as an argument");
-        }
-        let directory_path = args[1].clone();
-
-        let mut script = String::from("");
-        if args.len() >= 3 {
-            script = args[2].clone();
-        }
+        let args = Args::parse();
+        let directory_path = args.folder;
 
         let paths: Vec<String> = fs::read_dir(directory_path)
             .unwrap()
@@ -76,7 +80,7 @@ impl Application for Picker {
                 offset: 0,
                 paths,
                 zoom_mode: false,
-                script_on_file: script,
+                script_on_file: args.script,
             },
             Command::none(),
         )
