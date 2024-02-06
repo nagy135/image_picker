@@ -8,6 +8,7 @@ use iced::{
     executor, subscription, theme, window, Alignment, Application, Color, Command, Element, Length,
     Settings, Subscription, Theme,
 };
+use std::process::Command as ProcessCommand;
 use std::{env, fs, process};
 
 const ALLOWED_IMAGE_EXTENSIONS: [&str; 3] = ["png", "jpg", "jpeg"];
@@ -28,6 +29,7 @@ struct Picker {
     cursor: usize,
     offset: usize,
     zoom_mode: bool,
+    script_on_file: String,
 }
 
 #[derive(Debug, Clone)]
@@ -49,6 +51,11 @@ impl Application for Picker {
         }
         let directory_path = args[1].clone();
 
+        let mut script = String::from("");
+        if args.len() >= 3 {
+            script = args[2].clone();
+        }
+
         let paths: Vec<String> = fs::read_dir(directory_path)
             .unwrap()
             .map(|r| r.unwrap().path().to_str().unwrap().to_string())
@@ -69,6 +76,7 @@ impl Application for Picker {
                 offset: 0,
                 paths,
                 zoom_mode: false,
+                script_on_file: script,
             },
             Command::none(),
         )
@@ -111,6 +119,20 @@ impl Application for Picker {
                             }
                             KeyCode::L => {
                                 cursor_change = 1;
+                            }
+                            KeyCode::R => {
+                                let script = format!(
+                                    " {}  {} ",
+                                    self.script_on_file,
+                                    self.paths[self.cursor + self.offset].clone()
+                                );
+
+                                let _output = ProcessCommand::new("sh")
+                                    .arg("-c")
+                                    .arg(script)
+                                    .output()
+                                    .expect("failed to execute process");
+                                println!("_output {:?}", _output);
                             }
                             KeyCode::Enter => {
                                 self.zoom_mode = !self.zoom_mode;
